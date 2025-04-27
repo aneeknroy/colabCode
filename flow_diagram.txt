@@ -1,0 +1,21 @@
+User A/B/C
+   |
+   v
+[Client-side Editor]
+   |
+   v
+[WebSocket Connection]
+   |
+   v
+[Python WebSocket Server]
+   |
+   +--> [Session Manager] ---> Track users, cursors, rooms
+   |
+   +--> [Sync Engine] -------> Apply OT/CRDT to edits
+   |
+   +--> [Broadcaster] --------> Send changes to all clients
+   |
+   v
+[Database (optional)]
+   |
+   +--> Save latest document state / version history

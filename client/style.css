@@ -1,0 +1,22 @@
+body {
+    margin: 0;
+    display: flex;
+    font-family: sans-serif;
+  }
+  
+  #sidebar {
+    width: 200px;
+    background: #f4f4f4;
+    padding: 10px;
+    border-right: 1px solid #ddd;
+  }
+  
+  #editor {
+    flex: 1;
+    height: 100vh;
+  }
+  
+  .CodeMirror {
+    height: 100%;
+  }
+  

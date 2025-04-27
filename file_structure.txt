@@ -1,0 +1,21 @@
+Collaborative Code Editor
+│
+├── client/
+│   ├── index.html           --> Main UI layout
+│   ├── editor.js            --> Code editor logic (e.g., CodeMirror or Monaco integration)
+│   ├── websocket.js         --> WebSocket communication layer
+│   └── style.css            --> Optional styles
+│
+├── server/
+│   ├── app.py               --> Main WebSocket server (Python, using websockets or FastAPI)
+│   ├── sync_engine.py       --> Logic for OT/CRDT conflict resolution
+│   ├── sessions.py          --> Manages connected users, cursors, session states
+│   └── storage.py           --> Optional persistence (e.g., save to Redis or PostgreSQL)
+│
+├── shared/
+│   ├── protocol.py          --> Defines message types: edit, cursor, join, leave
+│   └── utils.py             --> Text transformation utilities, logging, etc.
+│
+├── requirements.txt         --> Python dependencies
+├── README.md
+└── run.sh                   --> Launch script (optional)

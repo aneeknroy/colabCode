@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Python WebSocket Code Editor</title>
+  <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.13/lib/codemirror.css">
+  <script src="https://unpkg.com/codemirror@5.65.13/lib/codemirror.js"></script>
+  <script src="https://unpkg.com/codemirror@5.65.13/mode/python/python.js"></script>
+  <style>
+    #editor { height: 300px; border: 1px solid #ccc; }
+    #output { white-space: pre-wrap; margin-top: 10px; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll; }
+  </style>
+</head>
+<body>
+  <textarea id="editor">print("Hello WebSocket")</textarea>
+  <button onclick="sendCode()">Run Code</button>
+  <div id="output"></div>
+
+  <script>
+    const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+      mode: "python",
+      lineNumbers: true
+    });
+
+    const output = document.getElementById("output");
+    const ws = new WebSocket("ws://localhost:8000/ws");
+
+    ws.onmessage = (event) => {
+      if (event.data === "done") return;
+      output.textContent += event.data + "\n";
+    };
+
+    function sendCode() {
+      output.textContent = "";
+      const code = editor.getValue();
+      ws.send(code);
+    }
+  </script>
+</body>
+</html>
