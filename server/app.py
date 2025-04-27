@@ -12,7 +12,7 @@ async def handler(websocket, path):
     user_id = f"user_{id(websocket)}"
     user_sessions[websocket] = {"id": user_id}
     await broadcast_user_list(room_id)
-
+# djdjd
     try:
         async for message in websocket:
             data = json.loads(message)
