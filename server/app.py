@@ -12,7 +12,7 @@ async def handler(websocket, path):
     user_id = f"user_{id(websocket)}"
     user_sessions[websocket] = {"id": user_id}
     await broadcast_user_list(room_id)
-# djdjd
+
     try:
         async for message in websocket:
             data = json.loads(message)
@@ -41,7 +41,7 @@ async def broadcast_user_list(room_id):
 async def main():
     print("WebSocket server running at ws://localhost:6789/<room_id>")
     async with websockets.serve(handler, "localhost", 6789):
-        await asyncio.Future()  # Run forever
+        await asyncio.Future()  # Keep server running
 
 if __name__ == "__main__":
     asyncio.run(main())
