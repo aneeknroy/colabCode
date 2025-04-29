@@ -3,19 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <title>Collaborative Editor</title>
-  <link rel="stylesheet" href="https://codemirror.net/lib/codemirror.css">
+
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div id="sidebar">
-    <h3>Users</h3>
-    <ul id="user-list"></ul>
+  <div id="container">
+    <div id="sidebar">
+      <h3>Users</h3>
+      <ul id="user-list"></ul>
+    </div>
+
+    <div id="main">
+      <div id="editor"></div>
+      <div id="terminal">
+        <div id="terminal-header">Terminal</div>
+        <pre id="output"></pre>
+      </div>
+    </div>
   </div>
 
-  <div id="editor"></div>
+  <!-- CodeMirror -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
 
-  <script src="https://codemirror.net/lib/codemirror.js"></script>
-  <script src="https://codemirror.net/mode/javascript/javascript.js"></script>
-  <script src="editor.js"></script>
+  <script type="module" src="editor.js"></script>
 </body>
+
+
 </html>
+

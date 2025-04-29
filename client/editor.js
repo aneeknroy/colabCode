@@ -42,3 +42,17 @@ editor.on("cursorActivity", () => {
     cursor: cursor
   }));
 });
+
+const runButton = document.getElementById("run-btn");
+const outputArea = document.getElementById("output");
+
+runButton.addEventListener("click", () => {
+  const code = editor.getValue();
+  try {
+    const result = eval(code);
+    outputArea.textContent = result !== undefined ? result : "Code executed.";
+  } catch (error) {
+    outputArea.textContent = "Error: " + error;
+  }
+});
+

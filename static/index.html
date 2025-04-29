@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Code Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background-color: #4a4a4a;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ddd;
+            background-color: white;  /* Add explicit background color */
+        }
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 15px;
+            border: 1px solid #ddd;  /* Add border to make editor visible */
+        }
+        .output-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #282a36;
+            color: #f8f8f2;
+        }
+        .output-header {
+            padding: 0.5rem 1rem;
+            background-color: #44475a;
+            color: #f8f8f2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .output-content {
+            flex: 1;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background-color: #6272a4;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #7b8bbd;
+        }
+        .run-button {
+            background-color: #50fa7b;
+            color: #282a36;
+        }
+        .run-button:hover {
+            background-color: #73ffa0;
+        }
+        .users-container {
+            padding: 0.5rem 1rem;
+            background-color: #f8f8f2;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .user-badge {
+            background-color: #bd93f9;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .status-message {
+            color: #8be9fd;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #50fa7b;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Add fallback for editor if CodeMirror fails to load */
+        #codeEditor {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            padding: 8px;
+            display: block;
+            border: none;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Collaborative Code Editor</h1>
+        <div class="action-buttons">
+            <button id="clearBtn">Clear Editor</button>
+            <button id="runBtn" class="run-button">Run Code</button>
+        </div>
+    </header>
+    
+    <div class="users-container" id="usersContainer">
+        <span>Active Users:</span>
+    </div>
+    
+    <main>
+        <div class="editor-container">
+            <textarea id="codeEditor"># Write your Python code here
+print('Hello, collaborative world!')</textarea>
+        </div>
+        <div class="output-container">
+            <div class="output-header">
+                <span>Output</span>
+                <div style="display: flex; align-items: center;">
+                    <span id="statusMessage" class="status-message"></span>
+                    <div id="loader" class="loader"></div>
+                </div>
+            </div>
+            <div class="output-content" id="outputContent"></div>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script>
+        // Initialize CodeMirror editor
+        let codeEditor;
+        
+        // Try-catch for CodeMirror initialization
+        try {
+            // Only initialize if CodeMirror exists
+            if (window.CodeMirror) {
+                codeEditor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+                    mode: 'python',
+                    theme: 'dracula',
+                    lineNumbers: true,
+                    indentUnit: 4,
+                    indentWithTabs: false,
+                    autoCloseBrackets: true,
+                    matchBrackets: true,
+                    lineWrapping: true
+                });
+                console.log("CodeMirror initialized successfully");
+            } else {
+                console.error("CodeMirror library not found");
+                // Use the textarea as fallback
+                codeEditor = {
+                    getValue: function() {
+                        return document.getElementById('codeEditor').value;
+                    },
+                    setValue: function(value) {
+                        document.getElementById('codeEditor').value = value;
+                    },
+                    on: function(event, callback) {
+                        if (event === 'change') {
+                            document.getElementById('codeEditor').addEventListener('input', function() {
+                                callback(this);
+                            });
+                        }
+                    }
+                };
+            }
+        } catch (e) {
+            console.error("Error initializing CodeMirror:", e);
+            // Use the textarea as fallback
+            codeEditor = {
+                getValue: function() {
+                    return document.getElementById('codeEditor').value;
+                },
+                setValue: function(value) {
+                    document.getElementById('codeEditor').value = value;
+                },
+                on: function(event, callback) {
+                    if (event === 'change') {
+                        document.getElementById('codeEditor').addEventListener('input', function() {
+                            callback(this);
+                        });
+                    }
+                }
+            };
+        }
+
+        // Get DOM elements
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const outputContent = document.getElementById('outputContent');
+        const usersContainer = document.getElementById('usersContainer');
+        const statusMessage = document.getElementById('statusMessage');
+        const loader = document.getElementById('loader');
+
+        // User information
+        const username = "User_" + Math.floor(Math.random() * 1000);
+        const userColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+        let users = {};
+        let ws;
+        let isConnected = false;
+        let isSendingChanges = false;
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+            
+            ws.onopen = () => {
+                isConnected = true;
+                statusMessage.textContent = "Connected";
+                // Send user info when connected
+                ws.send(JSON.stringify({
+                    type: 'join',
+                    username: username
+                }));
+            };
+            
+            ws.onclose = () => {
+                isConnected = false;
+                statusMessage.textContent = "Disconnected. Reconnecting...";
+                setTimeout(connectWebSocket, 2000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                statusMessage.textContent = "Connection error";
+            };
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                
+                switch (message.type) {
+                    case 'init':
+                        // Initialize the editor with current code
+                        isSendingChanges = true;
+                        codeEditor.setValue(message.code);
+                        isSendingChanges = false;
+                        
+                        // Update users list
+                        users = message.users;
+                        updateUsersList();
+                        break;
+                        
+                    case 'code_change':
+                        // Update code without triggering the change event
+                        if (message.username !== username) {
+                            isSendingChanges = true;
+                            codeEditor.setValue(message.code);
+                            isSendingChanges = false;
+                        }
+                        break;
+                        
+                    case 'execution_result':
+                        // Display execution result in output pane
+                        outputContent.textContent = message.output;
+                        loader.style.display = 'none';
+                        statusMessage.textContent = "Execution complete";
+                        break;
+                        
+                    case 'user_joined':
+                        // Add new user to the list
+                        users[message.username] = message.username;
+                        updateUsersList();
+                        break;
+                        
+                    case 'user_left':
+                        // Remove user from the list
+                        delete users[message.username];
+                        updateUsersList();
+                        break;
+                }
+            };
+        }
+
+        // Update the displayed list of users
+        function updateUsersList() {
+            const usersList = Object.keys(users);
+            
+            // Clear current list (except the "Active Users:" text)
+            while (usersContainer.childNodes.length > 1) {
+                usersContainer.removeChild(usersContainer.lastChild);
+            }
+            
+            // Add user badges
+            usersList.forEach(user => {
+                const userBadge = document.createElement('span');
+                userBadge.className = 'user-badge';
+                userBadge.textContent = user;
+                usersContainer.appendChild(userBadge);
+            });
+        }
+
+        // Event listener for code changes
+        codeEditor.on('change', (editor) => {
+            if (!isSendingChanges && isConnected) {
+                const code = editor.getValue();
+                ws.send(JSON.stringify({
+                    type: 'code_change',
+                    username: username,
+                    code: code
+                }));
+            }
+        });
+
+        // Event listener for running code
+        runBtn.addEventListener('click', () => {
+            if (isConnected) {
+                const code = codeEditor.getValue();
+                ws.send(JSON.stringify({
+                    type: 'run_code',
+                    username: username,
+                    code: code
+                }));
+                
+                // Show loading indicator
+                loader.style.display = 'inline-block';
+                statusMessage.textContent = "Running code...";
+            } else {
+                statusMessage.textContent = "Not connected. Cannot run code.";
+            }
+        });
+
+        // Event listener for clearing code
+        clearBtn.addEventListener('click', () => {
+            if (isConnected) {
+                codeEditor.setValue('# Write your Python code here
+');
+            }
+        });
+
+        // Initialize connection
+        connectWebSocket();
+        
+        // Add debugging info
+        console.log("Page loaded. Editor setup complete.");
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded");
+        });
+    </script>
+</body>
+</html>
+    
